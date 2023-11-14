@@ -45,4 +45,13 @@ public class SqlComponent {
         this.tables = tables;
         this.condition = null;
     }
+
+    public SqlComponent(String keyword, ArrayList<String> columns, ArrayList<String> tables, Condition condition){
+        this.step = 0;
+        this.keyword = keyword;
+        this.sql = null;
+        this.columns = columns;
+        this.tables = tables;
+        this.condition = condition;
+    }
 }

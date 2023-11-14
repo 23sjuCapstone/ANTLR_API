@@ -51,6 +51,7 @@ public class AntlrController {
             SqlComponent originalQuery = step2(sql);
             originalQuery.setStep(subquerySize+1);
             originalQuery.setSql(sql);
+            originalQuery.getCondition().setObject(subquery.get(0));
             components.add(subquerySize, originalQuery);
 
             for(int i=0;i<components.size();i++){
