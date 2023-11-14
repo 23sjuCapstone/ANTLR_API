@@ -16,12 +16,21 @@ public class AntlrApiApplication {
     public static void main(String[] args) {
         SpringApplication.run(AntlrApiApplication.class, args);
 
+
+
+
 //        String sql = "SELECT id FROM tb;";
 //        ArrayList<SqlComponent> components = new ArrayList<>();
 
 
-//        String sql = "SELECT a.name FROM t_person WHERE a.person in (SELECT b.person FROM grade WHERE grade = 'a');";
-//
+        String sql = "SELECT a.name FROM t_person WHERE a.person in (SELECT b.person FROM grade WHERE grade = 'a');";
+        ArrayList<String> test = findSubquery(sql);
+        System.out.println("test size : " + test.size());
+
+        for(int i =0;i<test.size();i++){
+            System.out.println(test.get(i));
+        }
+
 //        testApi(sql);
 
 

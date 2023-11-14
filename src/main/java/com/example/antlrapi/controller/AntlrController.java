@@ -35,7 +35,7 @@ public class AntlrController {
             // 다른 처리 방식 필요함
 
             // 서브쿼리 1개(총 쿼리가 2개인 경우)
-            ArrayList<String> subquery = pullSubquery(sql);
+            ArrayList<String> subquery = findSubquery(sql);
             int subquerySize = subquery.size();
             for(int i = 0; i < subquerySize; i++){
 

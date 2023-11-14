@@ -10,6 +10,7 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import com.example.antlr.gen.MySqlLexer;
 import com.example.antlr.gen.MySqlParser;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,7 +22,10 @@ public class ParseProcessor {
 
     public static SqlComponent sqlComponent = new SqlComponent();
 
-
+    static ArrayList<String> subquery = new ArrayList<>();
+    static ArrayList<String> subString = new ArrayList<>();
+    static ArrayList<Integer> idx = new ArrayList<>();
+    static ArrayList<Integer> idx_ = new ArrayList<>();
 
     public static String getCommand(String sqlQuery){
         String[] words = sqlQuery.split(" ");
@@ -29,21 +33,56 @@ public class ParseProcessor {
         return command;
     }
 
-    public static ArrayList<String> pullSubquery(String sql){
-        // () 사이에 다른 괄호가 있는 경우 정규식 표현으로 추출 불가 > 수정 필요
-        Pattern pattern = Pattern.compile("\\(\\s*SELECT[^)]*\\)", Pattern.CASE_INSENSITIVE);
+    public static ArrayList<Integer> findStart(String sql){
+        String regrex = "\\(\\s*SELECT";
+        Pattern pattern = Pattern.compile(regrex, Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(sql);
 
-        ArrayList<String> subquery = new ArrayList<>();
-
         while(matcher.find()){
-            String matchedSubstring = matcher.group();
-            String stringWithoutBracket = matchedSubstring.substring(1, matchedSubstring.length() - 1);
-            stringWithoutBracket += ";";
-            subquery.add(stringWithoutBracket);
+            int index = matcher.start();
+            idx.add(index);
+            System.out.println(index);
+        }
+
+        return idx;
+    }
+    static ArrayList<String> pullSubquery(ArrayList<Integer> idx, String sql){
+        subquery = new ArrayList<>();
+        Boolean isMine = true;
+        Integer myIdx = 0;
+        String query = "";
+
+        for(int i=0;i<idx.size();i++){  // 첫 번째 sql에 대해서
+            for(int j=idx.get(i) + 1;j<sql.length();j++){
+                if (sql.charAt(j) == '('){
+                    isMine = false;  // avg()
+                }
+                if(sql.charAt(j) == ')'){
+
+                    if (isMine == false) {
+                        isMine = true;
+                    }
+                    else{
+                        myIdx = j;
+                        break;
+                    }
+                }
+            }
+            if(myIdx != 0){
+                query = sql.substring(idx.get(i), myIdx+1);
+                String stringWithoutBracket = query.substring(1, query.length() - 1);
+                String stringWithoutBlank = stringWithoutBracket.trim() + ";";
+                subquery.add(stringWithoutBlank);
+                break;
+            }
         }
 
         return subquery;
+    }
+    public static ArrayList<String> findSubquery(String sql) {
+        idx_ = findStart(sql);
+        subString = pullSubquery(idx_, sql);
+        return subString;
     }
 
     public static int step1(String sqlQuery){
