@@ -18,12 +18,17 @@ import java.util.regex.Pattern;
 public class ParseProcessor {
 
     public static ParseTreeWalker walker = new ParseTreeWalker();
-    public static MySqlParser.RootContext tree;
+    // public static MySqlParser.RootContext tree;
 
-    public static SqlComponent sqlComponent = new SqlComponent();
+    // public static SqlComponent sqlComponent = new SqlComponent();
+    public static int[] count = new int[2];
 
-    static ArrayList<String> subquery = new ArrayList<>();
-    static ArrayList<String> subString = new ArrayList<>();
+
+
+//    static ArrayList<String> subquery = new ArrayList<>();
+//    static ArrayList<String> subString = new ArrayList<>();
+
+    static MySqlParser.RootContext tree = null;
     static ArrayList<Integer> idx = new ArrayList<>();
     static ArrayList<Integer> idx_ = new ArrayList<>();
 
@@ -44,10 +49,13 @@ public class ParseProcessor {
             System.out.println(index);
         }
 
+        System.out.println("Check idx " + idx.size());
         return idx;
     }
     static ArrayList<String> pullSubquery(ArrayList<Integer> idx, String sql){
-        subquery = new ArrayList<>();
+        ArrayList<String> subquery = new ArrayList<>();
+//
+//        subquery = new ArrayList<>();
         Boolean isMine = true;
         Integer myIdx = 0;
         String query = "";
@@ -73,19 +81,35 @@ public class ParseProcessor {
                 String stringWithoutBracket = query.substring(1, query.length() - 1);
                 String stringWithoutBlank = stringWithoutBracket.trim() + ";";
                 subquery.add(stringWithoutBlank);
-                break;
             }
         }
 
+        System.out.println("Check !!" + subquery.size());
         return subquery;
     }
     public static ArrayList<String> findSubquery(String sql) {
+
         idx_ = findStart(sql);
-        subString = pullSubquery(idx_, sql);
+        ArrayList<String> subString = pullSubquery(idx_, sql);
         return subString;
     }
-
-    public static int step1(String sqlQuery){
+//    public static ArrayList<String> SelectToComponents(String sql){
+//        ArrayList<String> subqueryfound = findSubquery(sql);
+//
+//        int subquerySize = subqueryfound.size();
+//        for(int i = 0; i < subquerySize; i++){
+//
+//            // step2함수는 SqlComponents 요소들 채워주는 용도
+//            System.out.println("subquery Check ! : " + subqueryfound.get(i));
+//            SqlComponent sqlcmpt = step2(subqueryfound.get(i));
+//
+//            sqlcmpt.setStep(i+1);
+//            sqlcmpt.setSql(subqueryfound.get(i));
+//            components.add(i, sqlcmpt);
+//        }
+//        return subqueryfound;
+//    }
+    public static int[] step1(String sqlQuery){
         // 파싱 준비
         CharStream charStream = CharStreams.fromString(sqlQuery);
         MySqlLexer mySqlLexer = new MySqlLexer(charStream);
@@ -101,8 +125,9 @@ public class ParseProcessor {
         // 순회
         walker.walk(listener, tree);
 
-        int startRuleCount = listener.getStartRuleCount();
-        return startRuleCount;
+        count = listener.getStartRuleCount();
+
+        return count;
 
         // 단계별 요구 사항을 실행할 때마다 매번 파스 트리를 생성하는 과정을 거쳐야 하는가 > 그런가보다
     }
@@ -120,42 +145,10 @@ public class ParseProcessor {
         ExtractComponentListener listener2 = new ExtractComponentListener();
         walker.walk(listener2, tree);  // tree는 1단계에서 사용한 tree를 사용해도 됨(새로 만들면 오류 남 ;; 왜 그런건지는 모르겠음 ;;), listener는 새로 만들기
 
-        sqlComponent = listener2.returnComponent();
-        for(int i = 0;i<sqlComponent.getColumns().size();i++){
-            System.out.println(sqlComponent.getColumns().get(i));
-        }
-        for(int i = 0;i<sqlComponent.getTables().size();i++){
-            System.out.println(sqlComponent.getTables().get(i));
-        }
+        SqlComponent sqlComponent = listener2.returnComponent();
 
         return sqlComponent;
     }
-
-//    public static void testApi(String sql){
-//        // For Test !
-//        ArrayList<SqlComponent> testcmp = new ArrayList<>();
-//
-//        ArrayList<String> subquery = pullSubquery(sql);
-//        int subquerySize = subquery.size();
-//        for(int i = 0; i<subquerySize; i++){
-//
-//            // step2함수는 SqlComponents 요소들 채워주는 용도
-//            SqlComponent sqlcmpt = step2(subquery.get(i));
-//            sqlcmpt.setStep(i+1);
-//            sqlcmpt.setSql(subquery.get(i));
-//            testcmp.add(i, sqlcmpt);
-//        }
-//        // 전체 쿼리 넣어주기
-//        SqlComponent originalQuery = step2(sql);
-//        originalQuery.setStep(subquerySize+1);
-//        originalQuery.setSql(sql);
-//        testcmp.add(subquerySize, originalQuery);
-//
-//        System.out.println("size of total testcmp : " + testcmp.size());
-//        for(int i =0;i<testcmp.size();i++){
-//            System.out.println(testcmp.get(i).getSql());
-//        }
-//    }
 
         public static ArrayList<SqlComponent> step3 (String sqlQuery){
 
@@ -165,7 +158,7 @@ public class ParseProcessor {
             CommonTokenStream commonTokenStream = new CommonTokenStream(mySqlLexer);
             MySqlParser mySqlParser = new MySqlParser(commonTokenStream);
 
-            tree = mySqlParser.root();
+            MySqlParser.RootContext tree = mySqlParser.root();
 //
 //        queryTree = mySqlParser.querySpecification();
 //        String str = queryTree.getText();

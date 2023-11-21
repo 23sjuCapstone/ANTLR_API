@@ -13,7 +13,6 @@ import static com.example.antlr.ParseProcessor.*;
 @RequestMapping("/antlr")
 public class AntlrController {
 
-
     @GetMapping("/test")
     public String test() {
         return "success";
@@ -21,48 +20,94 @@ public class AntlrController {
 
     @PostMapping("/run")
     public ArrayList<SqlComponent> runSQL(@RequestParam String sql) {
-        ArrayList<SqlComponent> components = new ArrayList<>();
+
         // 쿼리 개수 파악 1개면 키워드랑 전체 쿼리 보내주기
         // 결국 나는 components 배열을 보내주지만, 백엔드단에서 해당 크기가 1인지 아닌지로 구별
+//        ArrayList<SqlComponent> components = new ArrayList<>();
 
-//        components = step3(sql);
-        int queryCnt = step1(sql);
+        int[] queryCnt = step1(sql);
+        System.out.println("Union querycnt :" + queryCnt);
+//
+        if (queryCnt[0] == -1) {
+            ArrayList<SqlComponent> components = new ArrayList<>();
+            ArrayList<String> subqueryfound = findSubquery(sql);
+            System.out.println("subqueryFound : " + subqueryfound.size());
 
-        if (queryCnt != 0 && queryCnt != 1) {  // 복잡한 쿼리문 (queryCnt != 0 : insert update delete create ..  /  queryCnt != 1 : 단일 select)
+            int subquerySize = subqueryfound.size();
+            for (int i = 0; i < subquerySize; i++) {
+                SqlComponent sqlcmpt = step2(subqueryfound.get(i));
 
-            // 쿼리가 늘어나는 상황에 일반화 해서 짠다고 짰는데,
-            // 서브쿼리가 2개인 경우 (ex. Select ~ Union Select ~) 에는 전체 쿼리가 Select 문이 아니라
-            // 다른 처리 방식 필요함
-
-            // 서브쿼리 1개(총 쿼리가 2개인 경우)
-            ArrayList<String> subquery = findSubquery(sql);
-            int subquerySize = subquery.size();
-            for(int i = 0; i < subquerySize; i++){
-
-                // step2함수는 SqlComponents 요소들 채워주는 용도
-                System.out.println("subquery Check ! : " + subquery.get(i));
-                SqlComponent sqlcmpt = step2(subquery.get(i));
-
-                sqlcmpt.setStep(i+1);
-                sqlcmpt.setSql(subquery.get(i));
+                sqlcmpt.setStep(i + 1);
+                sqlcmpt.setSql(subqueryfound.get(i));
                 components.add(i, sqlcmpt);
             }
-            // 전체 쿼리 넣어주기
-            SqlComponent originalQuery = step2(sql);
-            originalQuery.setStep(subquerySize+1);
-            originalQuery.setSql(sql);
-            originalQuery.getCondition().setObject(subquery.get(0));
+            SqlComponent originalQuery = new SqlComponent(subquerySize + 1, "UNION", sql);
             components.add(subquerySize, originalQuery);
 
-            for(int i=0;i<components.size();i++){
-                System.out.println(components.get(i).getSql());
+            for (int i = 0; i < subqueryfound.size(); i++) {
+                System.out.println("subqueryFound : " + subqueryfound.get(i));
             }
-        }
-        else {   // 단순한 쿼리문 일 경우
-            String keyword = getCommand(sql);
-            components.add(0, new SqlComponent(1, keyword, sql));
+            return components;
         }
 
-        return components;
+        if (queryCnt[0] == 0) {
+            if (queryCnt[1] == 1) {
+                ArrayList<SqlComponent> components = new ArrayList<>();
+                String keyword = getCommand(sql);
+                components.add(0, new SqlComponent(1, keyword, sql));
+                return components;
+            } else {
+                // 1. select where절에 서브쿼리 1개(총 쿼리가 2개인 경우)
+                ArrayList<SqlComponent> components = new ArrayList<>();
+                ArrayList<String> subqueryfound = findSubquery(sql);
+
+                int subquerySize = subqueryfound.size();
+                for (int i = 0; i < subquerySize; i++) {
+                    SqlComponent sqlcmpt = step2(subqueryfound.get(i));
+
+                    sqlcmpt.setStep(i + 1);
+                    sqlcmpt.setSql(subqueryfound.get(i));
+                    components.add(i, sqlcmpt);
+                }
+                // 전체 쿼리 넣어주기
+                SqlComponent originalQuery = step2(sql);
+                originalQuery.setStep(subquerySize + 1);
+                originalQuery.setSql(sql);
+                originalQuery.getCondition().setObject(subqueryfound.get(0));
+                components.add(subquerySize, originalQuery);
+
+                return components;
+            }
+        }
+//        else if (queryCnt[0] != 0 && queryCnt != 1) {  // 복잡한 쿼리문 (queryCnt != 0 : insert update delete create .. 가 아니거나 /  queryCnt != 1 : 단일 select 가 아닐 때)
+//            // 1. select where절에 서브쿼리 1개(총 쿼리가 2개인 경우)
+//            ArrayList<SqlComponent> components = new ArrayList<>();
+//            ArrayList<String> subqueryfound = findSubquery(sql);
+//
+//            int subquerySize = subqueryfound.size();
+//            for(int i = 0; i < subquerySize; i++){
+//                SqlComponent sqlcmpt = step2(subqueryfound.get(i));
+//
+//                sqlcmpt.setStep(i+1);
+//                sqlcmpt.setSql(subqueryfound.get(i));
+//                components.add(i, sqlcmpt);
+//            }
+//            // 전체 쿼리 넣어주기
+//            SqlComponent originalQuery = step2(sql);
+//            originalQuery.setStep(subquerySize+1);
+//            originalQuery.setSql(sql);
+//            originalQuery.getCondition().setObject(subqueryfound.get(0));
+//            components.add(subquerySize, originalQuery);
+//
+//            return components;
+//        }
+//        else {   // 단순한 쿼리문 일 경우
+//            ArrayList<SqlComponent> components = new ArrayList<>();
+//            String keyword = getCommand(sql);
+//            components.add(0, new SqlComponent(1, keyword, sql));
+//            return components;
+//        }
+
+        return null;
     }
 }
