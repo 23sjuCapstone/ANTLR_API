@@ -59,6 +59,37 @@ public class ExampleVisitor extends MySqlParserBaseVisitor {
 //        }
         stepSqlComponent.setTables(usedTables);
 
+        // 3. 선택된 칼럼
+        int columnCnt = ctx.selectElements().getChildCount();
+        for(int i=0; i < columnCnt; i++) {
+            ParseTree columnSource = ctx.selectElements().getChild(i);
+            if(columnSource.getText() == ",") continue;
+            else {
+                if(columnSource.getChild(0) != null) {
+                    int dotCnt = columnSource.getChild(0).getChildCount();
+
+                    String tableName = "";
+                    String columnLable = "";
+
+                    if(dotCnt == 2) {  // 테이블명.칼럼명 인 경우
+                        tableName = columnSource.getChild(0).getChild(0).getText();
+                        columnLable = columnSource.getChild(0).getChild(1).getText().substring(1);
+                        selectedColumns.add(new ColumnInfo(tableName, columnLable));
+                    }
+                    else{  // 그냥 칼럼 명인 경우
+                        columnLable = columnSource.getChild(0).getChild(0).getText();
+                        selectedColumns.add(new ColumnInfo(columnLable));
+                    }
+                }
+            }
+        }
+
+
+        for(int i=0;i<selectedColumns.size();i++) {
+            System.out.println(selectedColumns.get(i).getTableName());
+            System.out.println(selectedColumns.get(i).getColumnLabel());
+        }
+        stepSqlComponent.setSelectedColumns(selectedColumns);
 
 
 
