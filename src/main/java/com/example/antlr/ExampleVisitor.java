@@ -8,7 +8,9 @@ import com.example.antlrapi.dto.TableInfo;
 import com.ibm.icu.impl.UResource;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ExampleVisitor extends MySqlParserBaseVisitor {
     public static ArrayList<String> sqlQueue = new ArrayList<>();
@@ -21,6 +23,7 @@ public class ExampleVisitor extends MySqlParserBaseVisitor {
         ArrayList<TableInfo> usedTables = new ArrayList<>();
         ArrayList<ColumnInfo> selectedColumns = new ArrayList<>();
         ArrayList<ColumnInfo> conditionColumns = new ArrayList<>();
+        ArrayList<String> conditions = new ArrayList<>();
 
         // 1. step, keyword, Sql
         step++;
@@ -74,25 +77,45 @@ public class ExampleVisitor extends MySqlParserBaseVisitor {
                     if(dotCnt == 2) {  // 테이블명.칼럼명 인 경우
                         tableName = columnSource.getChild(0).getChild(0).getText();
                         columnLable = columnSource.getChild(0).getChild(1).getText().substring(1);
-                        selectedColumns.add(new ColumnInfo(tableName, columnLable));
                     }
                     else{  // 그냥 칼럼 명인 경우
+                        tableName = "unknown";
                         columnLable = columnSource.getChild(0).getChild(0).getText();
-                        selectedColumns.add(new ColumnInfo(columnLable));
                     }
+                    selectedColumns.add(new ColumnInfo(tableName, columnLable));
                 }
             }
         }
 
 
-        for(int i=0;i<selectedColumns.size();i++) {
-            System.out.println(selectedColumns.get(i).getTableName());
-            System.out.println(selectedColumns.get(i).getColumnLabel());
-        }
+//        for(int i=0;i<selectedColumns.size();i++) {
+//            System.out.println(selectedColumns.get(i).getTableName());
+//            System.out.println(selectedColumns.get(i).getColumnLabel());
+//        }
         stepSqlComponent.setSelectedColumns(selectedColumns);
 
+        // 4. 조건 칼럼
 
 
+
+        // 5. Where절 전체 저장
+        String whereExpression = "";
+        ParseTree childern = ctx.fromClause().expression().getChild(0);
+        int childrenSize = childern.getChildCount();
+        for(int i=0;i<childrenSize;i++){
+            if(i == childrenSize - 1){
+                whereExpression += childern.getChild(i).getText();
+            }
+            else{
+                whereExpression += childern.getChild(i).getText();
+                whereExpression += " ";
+            }
+        }
+        conditions.add(whereExpression);
+//        System.out.println("Where expression : " + whereExpression);
+
+
+        // 2. 3. 4. 저장된 컴포넌트 저장
         stepComponents.add(stepSqlComponent);
     }
 
