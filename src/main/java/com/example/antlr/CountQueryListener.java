@@ -64,8 +64,7 @@ public class CountQueryListener extends MySqlParserBaseListener {
     }
 
     @Override public void enterInnerJoin(MySqlParser.InnerJoinContext ctx) {
-//        innerJoin++;
-//        System.out.println("enter INNERJOIN!");
+        innerJoin++;
     }
 
     public int[] getStartRuleCount(){
@@ -80,11 +79,11 @@ public class CountQueryListener extends MySqlParserBaseListener {
         }
         else if(innerJoin == 1){
             result[0] = -2;
-            result[0] = startRuleCount;
+            result[1] = startRuleCount;
             return result;
         }
         else{
-            result[0] = 0;  //  일반 중첩된 Select 문
+            result[0] = 0;  //  일반 중첩된 Select 문, 단일 select문 , insert, create 등등
             result[1]= startRuleCount;
             return result;
         }

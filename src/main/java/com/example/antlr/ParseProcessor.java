@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.example.antlr.ExampleVisitor.extractSelectComponent;
+
 public class ParseProcessor {
 
     public static ParseTreeWalker walker = new ParseTreeWalker();
@@ -150,7 +152,7 @@ public class ParseProcessor {
         return sqlComponent;
     }
 
-        public static ArrayList<SqlComponent> step3 (String sqlQuery){
+        public static void step3 (String sqlQuery){
 
             // 파싱 준비 과정
             CharStream charStream = CharStreams.fromString(sqlQuery);
@@ -158,25 +160,9 @@ public class ParseProcessor {
             CommonTokenStream commonTokenStream = new CommonTokenStream(mySqlLexer);
             MySqlParser mySqlParser = new MySqlParser(commonTokenStream);
 
-            MySqlParser.RootContext tree = mySqlParser.root();
-//
-//        queryTree = mySqlParser.querySpecification();
-//        String str = queryTree.getText();
-//        System.out.println(str);
-
-
-            // 커스텀 리스너 생성
-            ComponentListener listener = new ComponentListener();
-
-            // 커스텀한 리스너를 통해 tree를 root부터 순회
-            walker.walk(listener, tree);
-//        walker.walk(listener, queryTree.getParent());
-
-            ArrayList<SqlComponent> sqlComponents = listener.returnComponents();
-
-
-            return sqlComponents;
-
+            MySqlParser.QuerySpecificationContext parseTree = mySqlParser.querySpecification();  // mysqlParser.시작룰
+            ExampleVisitor visitor = new ExampleVisitor();
+            visitor.extractSelectComponent(parseTree, sqlQuery);
 
         }
 

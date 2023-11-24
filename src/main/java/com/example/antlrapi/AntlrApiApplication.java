@@ -1,5 +1,6 @@
 package com.example.antlrapi;
 
+import com.example.antlr.ExampleVisitor;
 import com.example.antlrapi.dto.Condition;
 import com.example.antlrapi.dto.SqlComponent;
 import org.springframework.boot.SpringApplication;
@@ -22,9 +23,10 @@ public class AntlrApiApplication {
 //        String sql = "SELECT id FROM tb;";
 //        ArrayList<SqlComponent> components = new ArrayList<>();
 
-        String sql = "SELECT a.name FROM t_person WHERE a.person in (SELECT b.person FROM grade WHERE grade = 'a');";
-        int[] cnt = step1(sql);
-        System.out.println("App에서 cnt : " + cnt);
+
+
+        String sql = "SELECT * FROM account WHERE balance >600;";
+        step3(sql);
 
 
 //        ArrayList<String> test = findSubquery(sql);

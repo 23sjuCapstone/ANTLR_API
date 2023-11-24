@@ -49,15 +49,28 @@ public class AntlrController {
             }
             return components;
         }
+        if (queryCnt[0] == -2){
+            // innerJoin 인경우 table이랑 // 해보면서 해야 하는 이유 : 어떻게 쿼리문이 미세하게 변형될 지 모른다..?
+            // ex. alias -> 그냥 조건문으로 null 이 아닌 경우에 진입 이런 식으로 경우 생각해서 코드 짜야 하나
+        }
 
         if (queryCnt[0] == 0) {
-            if (queryCnt[1] == 1) {
+            if (queryCnt[1] == 0) {
                 ArrayList<SqlComponent> components = new ArrayList<>();
                 String keyword = getCommand(sql);
                 components.add(0, new SqlComponent(1, keyword, sql));
                 return components;
-            } else {
-                // 1. select where절에 서브쿼리 1개(총 쿼리가 2개인 경우)
+            }
+            else if(queryCnt[1] == 1){
+                ArrayList<SqlComponent> components = new ArrayList<>();
+                SqlComponent simpleSelect = step2(sql);
+                simpleSelect.setStep(0);
+                simpleSelect.setSql(sql);
+                components.add(0, simpleSelect);
+                return components;
+            }
+            else {
+                // 1. select where절에 서브쿼리 1개/(총 쿼리가 2개인 경우)
                 ArrayList<SqlComponent> components = new ArrayList<>();
                 ArrayList<String> subqueryfound = findSubquery(sql);
 
